@@ -1,9 +1,14 @@
-"use client"
 
 import { LoginForm } from "@/components/login-form"
 import { GalleryVerticalEndIcon } from "lucide-react"
+import {currentUser} from "@clerk/nextjs/server";
+import {useUser} from "@clerk/nextjs";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const user = await currentUser()
+
+
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">

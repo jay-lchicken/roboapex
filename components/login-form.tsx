@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, FormEvent } from "react"
+import {useState, FormEvent, useEffect} from "react"
 import { useSignIn, useClerk } from "@clerk/nextjs"
 
 import { cn } from "@/lib/utils"
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Logo from "@/components/google-logo";
+import {useSearchParams} from "next/navigation";
 
 export function LoginForm({
   className,
@@ -21,11 +22,19 @@ export function LoginForm({
 }: React.ComponentProps<"form">) {
   const { signIn, isLoaded } = useSignIn()
   const { setActive, openSignIn } = useClerk()
+  const searchParams = useSearchParams()
+
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    if (errorParam) {
+      setError(errorParam)
+    }
+  }, [searchParams])
 
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -57,17 +66,11 @@ export function LoginForm({
 
   const signInWithGithub = async () => {
     if (!isLoaded) return
-    try {
-      await signIn.authenticateWithRedirect({
+    await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
-        redirectUrl: "/login",
+        redirectUrl: "/login/callback",
         redirectUrlComplete: "/",
       })
-    } catch (err: any) {
-      const msg =
-        err?.errors?.[0]?.message ?? "Google sign in failed."
-      setError(msg)
-    }
   }
 
   return (
@@ -150,7 +153,7 @@ export function LoginForm({
 
           <FieldDescription className="text-center">
             Don&apos;t have an account?{" "}
-            <a href="/sign-up" className="underline underline-offset-4">
+            <a href="/signup" className="underline underline-offset-4">
               Sign up
             </a>
           </FieldDescription>
