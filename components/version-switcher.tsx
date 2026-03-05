@@ -18,11 +18,25 @@ import { GalleryVerticalEndIcon, ChevronsUpDownIcon, CheckIcon } from "lucide-re
 export function VersionSwitcher({
   versions,
   defaultVersion,
+  selectedVersion,
+  onSelectVersion,
 }: {
   versions: string[]
   defaultVersion: string
+  selectedVersion?: string
+  onSelectVersion?: (value: string) => void
 }) {
-  const [selectedVersion, setSelectedVersion] = React.useState(defaultVersion)
+  const [internalVersion, setInternalVersion] = React.useState(defaultVersion)
+  const activeVersion = selectedVersion ?? internalVersion
+
+  const handleSelectVersion = (value: string) => {
+    if (onSelectVersion) {
+      onSelectVersion(value)
+      return
+    }
+
+    setInternalVersion(value)
+  }
 
   return (
     <SidebarMenu>
@@ -37,8 +51,8 @@ export function VersionSwitcher({
                 <GalleryVerticalEndIcon className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-medium">Documentation</span>
-                <span className="">v{selectedVersion}</span>
+                <span className="font-medium">Batch Number</span>
+                <span>{activeVersion}</span>
               </div>
               <ChevronsUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
@@ -50,10 +64,10 @@ export function VersionSwitcher({
             {versions.map((version) => (
               <DropdownMenuItem
                 key={version}
-                onSelect={() => setSelectedVersion(version)}
+                onSelect={() => handleSelectVersion(version)}
               >
-                v{version}{" "}
-                {version === selectedVersion && (
+                {version}{" "}
+                {version === activeVersion && (
                   <CheckIcon className="ml-auto" />
                 )}
               </DropdownMenuItem>

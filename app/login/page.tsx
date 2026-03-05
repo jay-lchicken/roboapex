@@ -1,35 +1,43 @@
+"use client"
 
-import { LoginForm } from "@/components/login-form"
-import { GalleryVerticalEndIcon } from "lucide-react"
-import {currentUser} from "@clerk/nextjs/server";
-import {useUser} from "@clerk/nextjs";
+import Link from "next/link"
+import { SignInButton } from "@clerk/nextjs"
+import { Button } from "@/components/ui/button"
 
-export default async function LoginPage() {
-  const user = await currentUser()
-
-
-
+export default function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
+        <div className="flex justify-center gap-2 md:justify-start">
+          <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="flex size-10 items-center justify-center rounded-md bg-secondary text-primary-foreground">
-              <img src="/logo-2.svg" className={"size-6"}/>
+              <img src="/logo-2.svg" className="size-6" alt="Robotics@Apex logo" />
             </div>
             Robotics@Apex
-          </a>
+          </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
-            <LoginForm />
+          <div className="w-full max-w-xs space-y-3 text-center">
+            <h1 className="text-2xl font-bold">Sign in</h1>
+            <p className="text-sm text-muted-foreground">
+              Open Clerk modal to sign in to your account.
+            </p>
+            <SignInButton mode="modal">
+              <Button className="w-full">Open Login Modal</Button>
+            </SignInButton>
+            <p className="text-sm text-muted-foreground">
+              No account?{" "}
+              <Link href="/signup" className="underline underline-offset-4">
+                Sign up
+              </Link>
+            </p>
           </div>
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
         <img
           src="/front1.png"
-          alt="Image"
+          alt="Robotics class"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
       </div>

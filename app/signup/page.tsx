@@ -1,30 +1,43 @@
 "use client"
 
-import { SignupForm } from "@/components/signup-form"
-import { GalleryVerticalEndIcon } from "lucide-react"
+import Link from "next/link"
+import { SignUpButton } from "@clerk/nextjs"
+import { Button } from "@/components/ui/button"
 
 export default function SignupPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
+          <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="flex size-10 items-center justify-center rounded-md bg-secondary text-primary-foreground">
-              <img src="/logo-2.svg" className={"size-6"}/>
+              <img src="/logo-2.svg" className="size-6" alt="Robotics@Apex logo" />
             </div>
             Robotics@Apex
-          </a>
+          </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
-            <SignupForm />
+          <div className="w-full max-w-xs space-y-3 text-center">
+            <h1 className="text-2xl font-bold">Create account</h1>
+            <p className="text-sm text-muted-foreground">
+              Open Clerk modal to create your account.
+            </p>
+            <SignUpButton mode="modal">
+              <Button className="w-full">Open Signup Modal</Button>
+            </SignUpButton>
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="underline underline-offset-4">
+                Sign in
+              </Link>
+            </p>
           </div>
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
         <img
           src="/front2.png"
-          alt="Image"
+          alt="Robotics workshop"
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
         />
       </div>
