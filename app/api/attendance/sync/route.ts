@@ -1,11 +1,16 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
+import { getRoleFromSessionClaims } from "@/lib/auth-role"
 import { pushAttendanceToGoogleSheet } from "@/lib/google-sheets"
 
 export async function POST(request: Request) {
-  const { userId } = await auth()
+  const { userId, sessionClaims } = await auth()
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+  const role = getRoleFromSessionClaims(sessionClaims)
+  if (role !== "admin" && role !== "taker") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   let body: unknown

@@ -1,17 +1,30 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"
 import { 
   ArrowRight,
   Users,
   Calendar,
   BarChart,
-  Github,
   Menu,
   X
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import Image from "next/image"
+
+const carouselImages = [
+  { src: "/caro1.png", alt: "Robotics@Apex activity 1" },
+  { src: "/caro2.png", alt: "Robotics@Apex activity 2" },
+  { src: "/caro3.png", alt: "Robotics@Apex activity 3" },
+] as const
 
 export default function Page() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -65,9 +78,30 @@ export default function Page() {
         )}
       </header>
 
-      <section className="container mx-auto px-4 py-24 sm:py-32">
-        <div className="mx-auto max-w-[980px] flex flex-col items-center gap-4 text-center">
-
+      <section className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="mx-auto flex flex-col items-center gap-4 text-center">
+          <div className="mt-2 w-full max-w-4xl">
+            <Carousel opts={{ loop: true }} className="w-full">
+              <CarouselContent>
+                {carouselImages.map((item) => (
+                  <CarouselItem key={item.src}>
+                    <div className="h-[260px] overflow-hidden rounded-xl border bg-muted/20 sm:h-[340px] md:h-[420px]">
+                      <Image
+                        src={item.src}
+                        alt={item.alt}
+                        width={1200}
+                        height={675}
+                        className="h-full w-full object-cover"
+                        priority={item.src === "/caro1.png"}
+                      />
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-3" />
+              <CarouselNext className="right-3" />
+            </Carousel>
+          </div>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
             Attendance tracking for
             <br />
@@ -79,17 +113,18 @@ export default function Page() {
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link href="/dashboard">
               <Button size="lg" className="gap-2">
-                Open Dashboard
+                Open Attendance Dashboard
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/admin-dashboard">
               <Button size="lg" variant="outline">
-                Open Dashboard for attendance takers
+                For attendance takers
               </Button>
             </Link>
 
           </div>
+
         </div>
       </section>
 
@@ -118,7 +153,6 @@ export default function Page() {
 
 
 
-      {/* CTA Section */}
       <section className="border-t bg-muted/50">
         <div className="container mx-auto px-4 py-24 sm:py-32">
           <div className="mx-auto max-w-[600px] flex flex-col items-center gap-4 text-center">
@@ -126,7 +160,7 @@ export default function Page() {
               Sign in now!
             </h2>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="/admin-dashboard">
+              <Link href="/dashboard">
                 <Button size="lg">Open Attendance Dashboard</Button>
               </Link>
             </div>
