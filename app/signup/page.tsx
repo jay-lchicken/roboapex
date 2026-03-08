@@ -20,10 +20,10 @@ export default function SignupPage() {
           <div className="w-full max-w-xs space-y-3 text-center">
             <h1 className="text-2xl font-bold">Create account</h1>
             <p className="text-sm text-muted-foreground">
-              Open Clerk modal to create your account.
+              Click on the button below to Sign Up
             </p>
             <SignUpButton mode="modal">
-              <Button className="w-full">Open Signup Modal</Button>
+              <Button className="w-full">Sign Up</Button>
             </SignUpButton>
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}

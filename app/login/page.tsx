@@ -27,10 +27,10 @@ export default function LoginPage() {
           <div className="w-full max-w-xs space-y-3 text-center">
             <h1 className="text-2xl font-bold">Sign in</h1>
             <p className="text-sm text-muted-foreground">
-              Open Clerk modal to sign in to your account.
+              Click on the button below to sign in
             </p>
             <SignInButton mode="modal">
-              <Button className="w-full">Open Login Modal</Button>
+              <Button className="w-full">Sign In</Button>
             </SignInButton>
             <p className="text-sm text-muted-foreground">
               No account?{" "}
