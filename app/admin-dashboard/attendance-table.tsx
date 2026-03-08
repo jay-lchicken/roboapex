@@ -14,7 +14,6 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
       <table className="w-full min-w-[900px] border-collapse text-sm">
         <thead>
           <tr className="border-b text-left">
-            <th className="px-2 py-2">No.</th>
             <th className="px-2 py-2">Name</th>
             <th className="px-2 py-2">Photo</th>
             <th className="px-2 py-2">Absentee Form</th>
@@ -38,7 +37,6 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
           ) : (
             students.map((student) => (
               <tr key={studentKey(student)} className="border-b">
-                <td className="px-2 py-2">{student.memberId}</td>
                 <td className="px-2 py-2 min-w-52">{student.memberName}</td>
                 <td className="px-2 py-2 min-w-36">
                   {student.photo ? (
