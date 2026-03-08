@@ -25,11 +25,13 @@ import {
   studentKey,
   toSheetDateLabel,
 } from "./utils"
+import { usePersistedBatch } from "./use-persisted-batch"
 import {toast} from "sonner";
 
+const batches = ["2023 Batch", "2024 Batch", "2025 Batch", "2026 Batch"] as const
+
 export function AdminDashboardClient() {
-  const batches = ["2023 Batch", "2024 Batch", "2025 Batch"]
-  const [selectedBatch, setSelectedBatch] = useState(batches[0])
+  const { selectedBatch, setSelectedBatch } = usePersistedBatch(batches)
   const [students, setStudents] = useState<AttendanceStudent[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [dateLabel, setDateLabel] = useState("")

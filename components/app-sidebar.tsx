@@ -5,7 +5,7 @@ import { SearchForm } from "@/components/search-form"
 import { VersionSwitcher } from "@/components/version-switcher"
 import {
   Sidebar,
-  SidebarContent,
+  SidebarContent, SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import {NavUser} from "@/components/nav-user";
 
 const data = {
   versions: ["2023 Batch","2024 Batch", "2025 Batch", "2026 Batch"],
@@ -22,8 +23,8 @@ const data = {
     {
       title: "Attendance",
       items: [
-        { title: "Attendance", url: "#" },
-        { title: "Excuses", url: "#" },
+        { title: "Attendance", url: "/admin-dashboard" },
+        { title: "Attendance Takers", url: "/admin-dashboard/takers" },
       ],
     },
   ],
@@ -45,7 +46,6 @@ export function AppSidebar({ selectedBatch, onBatchChange, ...props }: AppSideba
           selectedVersion={selectedBatch}
           onSelectVersion={onBatchChange}
         />
-        <SearchForm />
       </SidebarHeader>
       <SidebarContent>
         {data.navMain.map((item) => (
@@ -65,6 +65,9 @@ export function AppSidebar({ selectedBatch, onBatchChange, ...props }: AppSideba
           </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser/>
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )

@@ -1,16 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { 
   ArrowRight,
   Users,
   Calendar,
   BarChart,
-  Clock,
-  CheckCircle2,
   Github,
   Menu,
   X
@@ -41,12 +36,7 @@ export default function Page() {
             </nav>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <Github className="h-5 w-5" />
-            </Button>
-            <Link href="/dashboard" className="hidden md:block">
-              <Button>Dashboard</Button>
-            </Link>
+
             <Button
               variant="ghost"
               size="icon"
@@ -57,7 +47,6 @@ export default function Page() {
             </Button>
           </div>
         </div>
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t">
             <nav className="flex flex-col space-y-3 p-4">
@@ -70,15 +59,12 @@ export default function Page() {
               <Link href="#stats" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                 Stats
               </Link>
-              <Link href="/dashboard">
-                <Button className="w-full">Dashboard</Button>
-              </Link>
+
             </nav>
           </div>
         )}
       </header>
 
-      {/* Hero Section */}
       <section className="container mx-auto px-4 py-24 sm:py-32">
         <div className="mx-auto max-w-[980px] flex flex-col items-center gap-4 text-center">
 
@@ -93,8 +79,13 @@ export default function Page() {
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link href="/dashboard">
               <Button size="lg" className="gap-2">
-                Get Started
+                Open Dashboard
                 <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/admin-dashboard">
+              <Button size="lg" variant="outline">
+                Open Dashboard for attendance takers
               </Button>
             </Link>
 
@@ -135,8 +126,8 @@ export default function Page() {
               Sign in now!
             </h2>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <Link href="/dashboard">
-                <Button size="lg">Login</Button>
+              <Link href="/admin-dashboard">
+                <Button size="lg">Open Attendance Dashboard</Button>
               </Link>
             </div>
 
@@ -144,7 +135,6 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t">
         <div className="container mx-auto px-4 py-12">
 
@@ -152,11 +142,7 @@ export default function Page() {
             <p className="text-sm text-muted-foreground">
               © 2026 Robotics@Apex. All rights reserved.
             </p>
-            <div className="flex gap-4">
-              <Button variant="ghost" size="icon">
-                <Github className="h-4 w-4" />
-              </Button>
-            </div>
+
           </div>
         </div>
       </footer>

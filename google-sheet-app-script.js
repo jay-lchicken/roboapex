@@ -1,4 +1,5 @@
-const SHEET_NAME = "Term 1"; // change if needed
+const SHEET_NAME = "Term 1";
+const ABSENTEE_SHEET_NAME = "Absentees Form 2026";
 const TZ = "Asia/Singapore";
 
 function doPost(e) {
@@ -20,7 +21,7 @@ function str(v) {
 
 function createPhotoUrlExtractor(sheet) {
   const range = sheet.getDataRange();
-  const values = range.getValues(); // single full-sheet read [web:3][web:18]
+  const values = range.getValues();
 
   function extractPhotoUrl(r, c) {
     const v = values[r][c];
@@ -76,6 +77,7 @@ function loadAttendance(body) {
   const picked = pickDateColumn(headers, body.dateLabel);
   const dateCol = picked.dateCol;
   const dateLabel = picked.dateLabel;
+  const absenteeByEmail = buildAbsenteeLookup(dateLabel);
 
   const rows = [];
   let inBatch = !batchId;
@@ -101,6 +103,8 @@ function loadAttendance(body) {
       classRegNo: String(row[regCol] || "").trim(),
       gender: String(row[genderCol] || "").trim(),
       email: String(row[emailCol] || "").trim(),
+      absenteeFormStatus:
+        absenteeByEmail.get(normalizeEmail(row[emailCol])) || "",
       photo: extractPhotoUrl(r, photoCol),
       attendanceStatus: dateCol >= 0 ? str(row[dateCol]) : "",
       remarks: dateCol >= 0 ? str(row[dateCol + 1]) : "",
@@ -108,6 +112,152 @@ function loadAttendance(body) {
   }
 
   return json({ ok: true, dateLabel, students: rows });
+}
+
+function normalizeEmail(v) {
+  return str(v).toLowerCase();
+}
+
+function parseMonthDay(value) {
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value)) {
+    return { month: value.getMonth(), day: value.getDate() };
+  }
+
+  const text = str(value);
+  if (!text) return null;
+
+  const numeric = text.match(/^(\d{1,2})\/(\d{1,2})(?:\/\d{2,4})?$/);
+  if (numeric) {
+    const month = Number(numeric[1]) - 1;
+    const day = Number(numeric[2]);
+    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      return { month, day };
+    }
+  }
+
+  return parseHeaderDate(text);
+}
+
+function monthDayKey(value) {
+  const parsed = parseMonthDay(value);
+  if (!parsed) return "";
+  return parsed.month + "-" + parsed.day;
+}
+
+function parseTimestampMs(value) {
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value)) {
+    return value.getTime();
+  }
+  const text = str(value);
+  if (!text) return 0;
+  const parsed = new Date(text);
+  if (!isNaN(parsed.getTime())) return parsed.getTime();
+  return 0;
+}
+
+function findColumn(headers, aliases) {
+  return headers.findIndex((h) => aliases.includes(norm(h)));
+}
+
+function toAbsenteeStatus(typeValue) {
+  const type = str(typeValue);
+  const lowered = type.toLowerCase();
+  if (!lowered) return "";
+  if (lowered.includes("absent")) return "Absent form submitted";
+  if (lowered.includes("late")) return "Late form submitted";
+  if (lowered.includes("away")) return "Away form submitted";
+  return "Form submitted";
+}
+
+function findColumns(headers, aliases) {
+  const wanted = aliases.map(norm);
+  const cols = [];
+  for (let i = 0; i < headers.length; i++) {
+    if (wanted.includes(norm(headers[i]))) cols.push(i);
+  }
+  return cols;
+}
+
+function firstNonEmptyCell(row, cols) {
+  for (let i = 0; i < cols.length; i++) {
+    const value = str(row[cols[i]]);
+    if (value) return value;
+  }
+  return "";
+}
+
+function findAbsenteeHeaderRow(values) {
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i].map(norm);
+    const hasEmail = row.some(v => v === "email address" || v === "email");
+    const hasType = row.some(v => v === "type of absence");
+    const hasDate = row.some(v => v === "affected date");
+    if (hasEmail && hasType && hasDate) return i;
+  }
+  return -1;
+}
+
+function getAbsenteeSheet(ss) {
+  const named = ss.getSheetByName(ABSENTEE_SHEET_NAME);
+  if (named) return named;
+
+  const sheets = ss.getSheets();
+  for (let i = 0; i < sheets.length; i++) {
+    const values = sheets[i].getDataRange().getValues();
+    if (findAbsenteeHeaderRow(values) >= 0) return sheets[i];
+  }
+  return null;
+}
+
+function buildAbsenteeLookup(dateLabel) {
+  const ss = SpreadsheetApp.getActive();
+  const absenteeSheet = getAbsenteeSheet(ss);
+  if (!absenteeSheet) return new Map();
+
+  const values = absenteeSheet.getDataRange().getValues();
+  const headerRow = findAbsenteeHeaderRow(values);
+  if (headerRow < 0) return new Map();
+
+  const headers = values[headerRow];
+  const timestampCol = findColumn(headers, ["timestamp"]);
+  const emailCol = findColumn(headers, ["email address", "email"]);
+  const typeCol = findColumn(headers, ["type of absence"]);
+  const affectedDateCol = findColumn(headers, ["affected date"]);
+  const reasonCols = findColumns(headers, [
+    "reason(s) for application",
+    "other remarks?",
+  ]);
+
+  if (emailCol < 0 || typeCol < 0 || affectedDateCol < 0) return new Map();
+
+  const targetDateKey = monthDayKey(dateLabel);
+  const byEmail = new Map();
+
+  for (let r = headerRow + 1; r < values.length; r++) {
+    const row = values[r];
+    const email = normalizeEmail(row[emailCol]);
+    if (!email) continue;
+
+    const status = toAbsenteeStatus(row[typeCol]);
+    if (!status) continue;
+    const reason = firstNonEmptyCell(row, reasonCols);
+    const statusWithReason = reason ? status + " - " + reason : status;
+
+    if (targetDateKey) {
+      const affectedDateKey = monthDayKey(row[affectedDateCol]);
+      if (!affectedDateKey || affectedDateKey !== targetDateKey) continue;
+    }
+
+    const tsMs = timestampCol >= 0 ? parseTimestampMs(row[timestampCol]) : 0;
+    const prev = byEmail.get(email);
+    if (!prev || tsMs >= prev.tsMs) {
+      byEmail.set(email, { status: statusWithReason, tsMs });
+    }
+  }
+
+  const statusByEmail = new Map();
+  byEmail.forEach((entry, email) => statusByEmail.set(email, entry.status));
+  return statusByEmail;
 }
 
 function findBatchBounds(values, headerRow, batchId) {
@@ -119,7 +269,7 @@ function findBatchBounds(values, headerRow, batchId) {
   for (let r = headerRow + 1; r < values.length; r++) {
     const rowText = values[r].map(x => String(x || "").trim());
     if (rowText.includes(batchId)) {
-      start = r + 1; // data starts after batch marker row
+      start = r + 1;
       break;
     }
   }
@@ -138,7 +288,7 @@ function findBatchBounds(values, headerRow, batchId) {
 
 function headerLabel(v) {
   if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v)) {
-    return Utilities.formatDate(v, TZ, "d MMMM"); // e.g. "2 January"
+    return Utilities.formatDate(v, TZ, "d MMMM");
   }
   return String(v || "").replace(/\u00A0/g, " ").trim();
 }
@@ -214,7 +364,6 @@ function syncAttendance(body) {
 
   const { start, end } = findBatchBounds(values, headerRow, batchId);
 
-  // Build lookup: memberId/name → row index (0-based)
   const map = new Map();
   for (let r = start; r <= end; r++) {
     const noVal = String(values[r][noCol] || "").trim();
@@ -224,7 +373,7 @@ function syncAttendance(body) {
   }
 
   const records = Array.isArray(body.records) ? body.records : [];
-  const changes = []; // { row, status, excuse }
+  const changes = [];
   records.forEach(rec => {
     const id = String(rec.memberId || "").trim();
     const name = String(rec.memberName || "").trim().toLowerCase();
@@ -239,7 +388,6 @@ function syncAttendance(body) {
 
   if (changes.length === 0) return json({ ok: true, updated: 0 });
 
-  // Batch read + write for the whole batch range [web:3][web:18]
   const batchRows = end - start + 1;
   const existing = sheet
     .getRange(start + 1, dateCol + 1, batchRows, 2)
@@ -260,8 +408,8 @@ function syncAttendance(body) {
 
 function norm(s) {
   return String(s || "")
-    .replace(/\u00A0/g, " ")      // non-breaking space
-    .replace(/[\u200B-\u200D]/g, "") // zero-width chars
+    .replace(/\u00A0/g, " ")
+    .replace(/[\u200B-\u200D]/g, "")
     .trim()
     .replace(/:$/, "")
     .toLowerCase();

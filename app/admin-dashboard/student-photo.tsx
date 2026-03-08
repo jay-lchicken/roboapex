@@ -20,7 +20,7 @@ export function StudentPhoto({ photo, memberName }: StudentPhotoProps) {
   const src = attempt > 0 ? appendCacheBust(normalizedUrl, attempt) : normalizedUrl
   return (
     <img
-      className="size-12 rounded-sm object-cover"
+      className="size-28 rounded-sm object-cover"
       src={src}
       alt={`${memberName} profile`}
       loading="lazy"

@@ -5,6 +5,7 @@ export type AttendanceStudent = {
   classRegNo: string
   gender: string
   email: string
+  absenteeFormStatus: string
   attendanceStatus: string
   remarks: string
   photo: string

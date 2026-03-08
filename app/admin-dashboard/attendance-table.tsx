@@ -21,6 +21,7 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
             <th className="px-2 py-2">Reg No</th>
             <th className="px-2 py-2">Gender</th>
             <th className="px-2 py-2">Email</th>
+            <th className="px-2 py-2">Absentee Form</th>
             <th className="px-2 py-2">Status</th>
             <th className="px-2 py-2">Remarks</th>
           </tr>
@@ -28,13 +29,13 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
         <tbody>
           {isLoading ? (
             <tr>
-              <td className="px-2 py-3 text-muted-foreground" colSpan={9}>
+              <td className="px-2 py-3 text-muted-foreground" colSpan={10}>
                 Loading attendance...
               </td>
             </tr>
           ) : students.length === 0 ? (
             <tr>
-              <td className="px-2 py-3 text-muted-foreground" colSpan={9}>
+              <td className="px-2 py-3 text-muted-foreground" colSpan={10}>
                 No students found for this batch.
               </td>
             </tr>
@@ -43,17 +44,20 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
               <tr key={studentKey(student)} className="border-b">
                 <td className="px-2 py-2">{student.memberId}</td>
                 <td className="px-2 py-2 min-w-52">{student.memberName}</td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-2 min-w-36">
                   {student.photo ? (
                     <StudentPhoto photo={student.photo} memberName={student.memberName} />
                   ) : (
-                    <div className="size-12 rounded-sm bg-muted" />
+                    <div className="size-28 rounded-sm bg-muted" />
                   )}
                 </td>
                 <td className="px-2 py-2">{student.className}</td>
                 <td className="px-2 py-2">{student.classRegNo}</td>
                 <td className="px-2 py-2">{student.gender}</td>
                 <td className="px-2 py-2">{student.email}</td>
+                <td className="px-2 py-2">
+                  {student.absenteeFormStatus || "-"}
+                </td>
                 <td className="px-2 py-2">
                   <select
                     value={normalizeAttendanceStatus(student.attendanceStatus)}

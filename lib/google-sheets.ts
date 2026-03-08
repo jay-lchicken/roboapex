@@ -20,6 +20,7 @@ export type AttendanceStudent = {
   classRegNo: string
   gender: string
   email: string
+  absenteeFormStatus: string
   attendanceStatus: string
   remarks: string
   photo: string
@@ -153,6 +154,9 @@ export async function loadAttendanceFromGoogleSheet(payload: GoogleSheetLoadPayl
         classRegNo: asString(item.classRegNo ?? item["Class Reg. No"] ?? item.classRegNo),
         gender: asString(item.gender ?? item.Gender),
         email: asString(item.email ?? item.Email),
+        absenteeFormStatus: asString(
+          item.absenteeFormStatus ?? item.absenceFormStatus ?? item.absenceStatus ?? ""
+        ),
         attendanceStatus: normalizeAttendanceStatus(
           item.attendanceStatus ?? item.status ?? item.currentAttendance ?? ""
         ),
