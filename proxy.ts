@@ -5,7 +5,10 @@ import { getRoleFromSessionClaims } from "@/lib/auth-role"
 
 const isProtectedRoute = createRouteMatcher(["/((?!$|login$|signup$|no-access$).*)"])
 const isAttendanceRoute = createRouteMatcher(["/admin-dashboard(.*)"])
-const isAttendanceApiRoute = createRouteMatcher(["/api/attendance/(.*)"])
+const isAttendanceTakerApiRoute = createRouteMatcher([
+  "/api/attendance/load(.*)",
+  "/api/attendance/sync(.*)",
+])
 const isRoleManagementRoute = createRouteMatcher([
   "/admin-dashboard/takers(.*)",
   "/api/admin/users/role(.*)",
@@ -36,7 +39,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(noAccessUrl)
   }
 
-  if ((isAttendanceRoute(req) || isAttendanceApiRoute(req)) && !canTakeAttendance) {
+  if ((isAttendanceRoute(req) || isAttendanceTakerApiRoute(req)) && !canTakeAttendance) {
     if (req.nextUrl.pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }

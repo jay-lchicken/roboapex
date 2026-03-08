@@ -17,10 +17,6 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
             <th className="px-2 py-2">No.</th>
             <th className="px-2 py-2">Name</th>
             <th className="px-2 py-2">Photo</th>
-            <th className="px-2 py-2">Class</th>
-            <th className="px-2 py-2">Reg No</th>
-            <th className="px-2 py-2">Gender</th>
-            <th className="px-2 py-2">Email</th>
             <th className="px-2 py-2">Absentee Form</th>
             <th className="px-2 py-2">Status</th>
             <th className="px-2 py-2">Remarks</th>
@@ -51,10 +47,6 @@ export function AttendanceTable({ students, isLoading, onUpdateStudent }: Attend
                     <div className="size-28 rounded-sm bg-muted" />
                   )}
                 </td>
-                <td className="px-2 py-2">{student.className}</td>
-                <td className="px-2 py-2">{student.classRegNo}</td>
-                <td className="px-2 py-2">{student.gender}</td>
-                <td className="px-2 py-2">{student.email}</td>
                 <td className="px-2 py-2">
                   {student.absenteeFormStatus || "-"}
                 </td>

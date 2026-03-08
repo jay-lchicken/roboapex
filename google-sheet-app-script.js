@@ -10,6 +10,7 @@ function doPost(e) {
 
     const action = body.action || "syncAttendance";
     if (action === "loadAttendance") return loadAttendance(body);
+    if (action === "loadUserAttendance") return loadUserAttendance(body);
     return syncAttendance(body);
   } catch (err) {
     return json({ error: String(err) }, 500);
@@ -112,6 +113,77 @@ function loadAttendance(body) {
   }
 
   return json({ ok: true, dateLabel, students: rows });
+}
+
+function loadUserAttendance(body) {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  if (!sheet) throw new Error("Sheet not found: " + SHEET_NAME);
+
+  const values = sheet.getDataRange().getValues();
+  const headerRow = findHeaderRow(values);
+  const headers = values[headerRow];
+
+  const email = normalizeEmail(body.email);
+  if (!email) throw new Error("email is required.");
+
+  const noCol = indexOfHeader(headers, "No.");
+  const nameCol = indexOfHeader(headers, "Name");
+  const classCol = indexOfHeader(headers, "Class");
+  const regCol = indexOfHeader(headers, "Class Reg. No");
+  const genderCol = indexOfHeader(headers, "Gender");
+  const emailCol = indexOfHeader(headers, "Email");
+  const termPctCol = indexOfHeaderOptional(headers, ["percentage (term)"]);
+  const totalPctCol = indexOfHeaderOptional(headers, ["percentage (total)"]);
+
+  const dateColumns = collectDateColumns(headers);
+  const picked = pickDateColumn(headers, body.dateLabel);
+  const dateCol = picked.dateCol;
+  const dateLabel = picked.dateLabel;
+  const absenteeByEmail = buildAbsenteeLookup(dateLabel);
+
+  let rowIndex = -1;
+  for (let r = headerRow + 1; r < values.length; r++) {
+    const row = values[r];
+    const noVal = str(row[noCol]);
+    if (!/^\d+$/.test(noVal)) continue;
+    if (normalizeEmail(row[emailCol]) === email) {
+      rowIndex = r;
+      break;
+    }
+  }
+
+  if (rowIndex < 0) {
+    return json({ ok: true, found: false, email });
+  }
+
+  const row = values[rowIndex];
+  const sessions = dateColumns.map(function (entry) {
+    return {
+      dateLabel: entry.label,
+      attendanceStatus: str(row[entry.col]),
+      remarks: str(row[entry.col + 1]),
+    };
+  });
+
+  return json({
+    ok: true,
+    found: true,
+    dateLabel,
+    student: {
+      memberId: str(row[noCol]),
+      memberName: str(row[nameCol]),
+      className: str(row[classCol]),
+      classRegNo: str(row[regCol]),
+      gender: str(row[genderCol]),
+      email: str(row[emailCol]),
+      absenteeFormStatus: absenteeByEmail.get(email) || "",
+      attendanceStatus: dateCol >= 0 ? str(row[dateCol]) : "",
+      remarks: dateCol >= 0 ? str(row[dateCol + 1]) : "",
+      percentageTerm: termPctCol >= 0 ? str(row[termPctCol]) : "",
+      percentageTotal: totalPctCol >= 0 ? str(row[totalPctCol]) : "",
+      sessions: sessions,
+    },
+  });
 }
 
 function normalizeEmail(v) {
@@ -346,6 +418,17 @@ function pickDateColumn(headers, preferred) {
   return { dateCol: candidate.i, dateLabel: candidate.label };
 }
 
+function collectDateColumns(headers) {
+  const cols = [];
+  for (var i = 0; i < headers.length; i++) {
+    var parsed = parseHeaderDate(headers[i]);
+    if (parsed) {
+      cols.push({ col: i, label: headerLabel(headers[i]) });
+    }
+  }
+  return cols;
+}
+
 function syncAttendance(body) {
   const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
   if (!sheet) throw new Error("Sheet not found: " + SHEET_NAME);
@@ -440,6 +523,13 @@ function indexOfHeader(headers, label) {
   const idx = headers.findIndex((h) => wanted.includes(norm(h)));
   if (idx === -1) throw new Error("Missing header: " + label);
   return idx;
+}
+
+function indexOfHeaderOptional(headers, labels) {
+  const wanted = labels.map(norm);
+  return headers.findIndex(function (h) {
+    return wanted.includes(norm(h));
+  });
 }
 
 function json(obj, code) {

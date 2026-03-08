@@ -31,6 +31,32 @@ export type GoogleSheetLoadPayload = {
   dateLabel?: string
 }
 
+export type UserAttendanceSession = {
+  dateLabel: string
+  attendanceStatus: string
+  remarks: string
+}
+
+export type UserAttendance = {
+  memberId: string
+  memberName: string
+  className: string
+  classRegNo: string
+  gender: string
+  email: string
+  absenteeFormStatus: string
+  attendanceStatus: string
+  remarks: string
+  percentageTerm: string
+  percentageTotal: string
+  sessions: UserAttendanceSession[]
+}
+
+export type GoogleSheetUserLoadPayload = {
+  email: string
+  dateLabel?: string
+}
+
 export async function pushAttendanceToGoogleSheet(payload: GoogleSheetSyncPayload) {
   const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL
 
@@ -169,5 +195,93 @@ export async function loadAttendanceFromGoogleSheet(payload: GoogleSheetLoadPayl
   return {
     dateLabel: asString(data.dateLabel),
     students,
+  }
+}
+
+type UserLoadWebhookResponse = {
+  ok?: unknown
+  found?: unknown
+  dateLabel?: unknown
+  student?: unknown
+  error?: unknown
+  message?: unknown
+}
+
+export async function loadUserAttendanceFromGoogleSheet(payload: GoogleSheetUserLoadPayload) {
+  const webhookUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL
+
+  if (!webhookUrl) {
+    throw new Error("GOOGLE_SHEETS_WEBHOOK_URL is not configured.")
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      secret: process.env.GOOGLE_SHEETS_WEBHOOK_SECRET ?? "",
+      action: "loadUserAttendance",
+      ...payload,
+      submittedAt: new Date().toISOString(),
+    }),
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || "Google Sheets user load request failed.")
+  }
+
+  const data = (await response.json()) as UserLoadWebhookResponse
+  const webhookError = asString(data.error ?? data.message)
+  if (webhookError) {
+    throw new Error(webhookError)
+  }
+
+  const found = Boolean(data.found)
+  if (!found) {
+    return {
+      found: false,
+      dateLabel: asString(data.dateLabel),
+      student: null,
+    }
+  }
+
+  const raw = (data.student ?? {}) as Record<string, unknown>
+  const rawSessions = Array.isArray(raw.sessions) ? raw.sessions : []
+
+  const sessions: UserAttendanceSession[] = rawSessions.map((entry) => {
+    const item = entry as Record<string, unknown>
+    return {
+      dateLabel: asString(item.dateLabel),
+      attendanceStatus: normalizeAttendanceStatus(item.attendanceStatus),
+      remarks: asString(item.remarks),
+    }
+  })
+
+  const student: UserAttendance = {
+    memberId: asString(raw.memberId ?? raw["No."] ?? raw.no),
+    memberName: asString(raw.memberName ?? raw.Name ?? raw.name),
+    className: asString(raw.className ?? raw.Class ?? raw.class),
+    classRegNo: asString(raw.classRegNo ?? raw["Class Reg. No"] ?? raw.classRegNo),
+    gender: asString(raw.gender ?? raw.Gender),
+    email: asString(raw.email ?? raw.Email),
+    absenteeFormStatus: asString(
+      raw.absenteeFormStatus ?? raw.absenceFormStatus ?? raw.absenceStatus ?? ""
+    ),
+    attendanceStatus: normalizeAttendanceStatus(
+      raw.attendanceStatus ?? raw.status ?? raw.currentAttendance ?? ""
+    ),
+    remarks: asString(raw.remarks ?? raw.Remarks ?? raw.currentRemarks ?? ""),
+    percentageTerm: asString(raw.percentageTerm ?? raw["Percentage (Term)"]),
+    percentageTotal: asString(raw.percentageTotal ?? raw["Percentage (Total)"]),
+    sessions,
+  }
+
+  return {
+    found: true,
+    dateLabel: asString(data.dateLabel),
+    student,
   }
 }
